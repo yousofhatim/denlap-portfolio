@@ -1,11 +1,213 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/dental-lab/portfolio/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>معمل أسنان الحرمين</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <script>window.location.replace('/dental-lab/portfolio/');</script>
+
+    <!-- شريط رأس الصفحة -->
+    <header class="top-bar">
+        <div class="top-bar-inner">
+            <div class="logo-area">
+                <i class="fas fa-tooth logo-icon"></i>
+                <span class="logo-text">معمل أسنان الحرمين</span>
+            </div>
+            <button class="create-btn" id="createProjectBtn">
+                <i class="fas fa-plus"></i>
+                منتج جديد
+            </button>
+        </div>
+    </header>
+
+    <!-- المنتجات -->
+    <main class="main-content">
+        <h2 class="section-title">المنتجات</h2>
+        <div class="products-grid" id="projectsContainer"></div>
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <i class="fas fa-tooth"></i>
+                <strong>معمل أسنان الحرمين</strong>
+            </div>
+            <div class="footer-contacts">
+                <a href="tel:+966000000000" class="footer-link">
+                    <i class="fas fa-phone"></i> اتصل بنا
+                </a>
+                <a href="mailto:info@haramen-dental.com" class="footer-link">
+                    <i class="fas fa-envelope"></i> راسلنا
+                </a>
+            </div>
+            <p class="footer-copy">جميع الحقوق محفوظة © 2025</p>
+        </div>
+    </footer>
+
+    <!-- ======== نافذة إنشاء منتج ======== -->
+    <div class="overlay" id="createProjectModal">
+        <div class="sheet">
+            <div class="sheet-header">
+                <h3>إنشاء منتج جديد</h3>
+                <button class="icon-btn" id="closeCreateProjectModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="createProjectForm">
+                <div class="drop-zone" id="coverDropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>اسحب صورة الغلاف هنا أو انقر للاختيار</p>
+                    <input type="file" id="projectCoverFile" class="hidden-input" accept="image/*" required>
+                </div>
+                <div class="preview-wrap" id="coverPreview" style="display:none;">
+                    <img id="coverPreviewImg" src="" alt="preview">
+                    <button type="button" class="remove-btn" id="removeCoverBtn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="field">
+                    <label>اسم المنتج</label>
+                    <input type="text" id="projectName" class="input" placeholder="مثال: طقم أسنان كامل...">
+                </div>
+                <button type="submit" class="btn-primary" id="createProjectSubmit">
+                    <i class="fas fa-plus"></i> إنشاء المنتج
+                </button>
+                <p class="status-msg" id="createProjectStatus"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======== نافذة إضافة صورة للمشروع ======== -->
+    <div class="overlay top-overlay" id="addProjectPhotoModal">
+        <div class="sheet">
+            <div class="sheet-header">
+                <h3>إضافة صورة</h3>
+                <button class="icon-btn" id="closeProjectPhotoModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="projectPhotoForm">
+                <div class="field">
+                    <label>اختر صورة</label>
+                    <input type="file" id="projectPhotoFile" class="input" accept="image/*" required>
+                </div>
+                <div class="field">
+                    <label>الوصف</label>
+                    <textarea id="projectPhotoDescription" class="input" rows="2" placeholder="وصف الصورة..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">حفظ الصورة</button>
+                <p class="status-msg" id="projectPhotoStatus"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======== نافذة إضافة فيديو للمشروع ======== -->
+    <div class="overlay top-overlay" id="addProjectVideoModal">
+        <div class="sheet">
+            <div class="sheet-header">
+                <h3>إضافة فيديو</h3>
+                <button class="icon-btn" id="closeProjectVideoModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="projectVideoForm">
+                <div class="field">
+                    <label>اختر فيديو</label>
+                    <input type="file" id="projectVideoFile" class="input" accept="video/*" required>
+                </div>
+                <div class="field">
+                    <label>الوصف</label>
+                    <textarea id="projectVideoDescription" class="input" rows="2" placeholder="وصف الفيديو..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">حفظ الفيديو</button>
+                <p class="status-msg" id="projectVideoStatus"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======== نافذة إضافة وسائط للمشروع ======== -->
+    <div class="overlay top-overlay" id="addProjectMediaModal">
+        <div class="sheet">
+            <div class="sheet-header">
+                <h3>إضافة وسائط</h3>
+                <button class="icon-btn" id="closeProjectMediaModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="projectMediaForm">
+                <div class="media-type-row">
+                    <button type="button" class="type-chip active" data-type="youtube"><i class="fab fa-youtube"></i> يوتيوب</button>
+                    <button type="button" class="type-chip" data-type="link"><i class="fas fa-link"></i> رابط</button>
+                    <button type="button" class="type-chip" data-type="pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                </div>
+                <div class="field" id="pmLinkField">
+                    <label>الرابط</label>
+                    <input type="url" id="projectMediaLink" class="input" placeholder="https://...">
+                </div>
+                <div class="field" id="pmFileField" style="display:none;">
+                    <label>ملف PDF</label>
+                    <input type="file" id="projectMediaPdfFile" class="input" accept=".pdf">
+                </div>
+                <div class="field">
+                    <label>الوصف</label>
+                    <textarea id="projectMediaDescription" class="input" rows="2" placeholder="وصف الوسائط..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">حفظ</button>
+                <p class="status-msg" id="projectMediaStatus"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======== نافذة تأكيد الحذف ======== -->
+    <div class="overlay top-overlay" id="confirmDeleteModal">
+        <div class="sheet confirm-sheet">
+            <i class="fas fa-exclamation-triangle warn-icon"></i>
+            <h3 id="confirmDeleteTitle">هل أنت متأكد؟</h3>
+            <p id="confirmDeleteMsg">سيتم حذف هذا العنصر نهائياً</p>
+            <div class="confirm-btns">
+                <button class="btn-danger" id="confirmDeleteYes">نعم، احذف</button>
+                <button class="btn-secondary" id="confirmDeleteNo">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== نافذة المشروع (عرض كامل) ======== -->
+    <div class="project-overlay" id="projectModal">
+        <div class="project-sheet">
+
+            <!-- رأس النافذة -->
+            <div class="project-header">
+                <button class="icon-btn close-project-btn" id="closeProjectModal"><i class="fas fa-times"></i></button>
+                <h2 class="project-title" id="projectModalTitle">المنتج</h2>
+            </div>
+
+            <!-- شريط الأدوات -->
+            <div class="project-toolbar">
+                <button class="tool-btn add-photo-btn" id="addPhotoToProjectBtn">
+                    <i class="fas fa-image"></i><span>صورة</span>
+                </button>
+                <button class="tool-btn add-video-btn" id="addVideoToProjectBtn">
+                    <i class="fas fa-video"></i><span>فيديو</span>
+                </button>
+                <button class="tool-btn add-media-btn" id="addMediaToProjectBtn">
+                    <i class="fas fa-link"></i><span>رابط</span>
+                </button>
+                <div class="toolbar-spacer"></div>
+                <button class="tool-btn delete-project-btn" id="deleteProjectBtn">
+                    <i class="fas fa-trash"></i><span>حذف المنتج</span>
+                </button>
+            </div>
+
+            <!-- محتوى المشروع -->
+            <div class="project-body" id="projectModalBody">
+                <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+
+        </div>
+    </div>
+
+    <audio id="backgroundMusic" loop autoplay>
+        <source src="https://firebasestorage.googleapis.com/v0/b/kid-id.appspot.com/o/Interstellar%20-%20Hans%20Zimmer%20(Soft%20Version)%20Sleep%2C%20Study%2C%20Relax%20-%201%20Hour.mp3?alt=media&token=9d944a0a-adab-4ffd-ac39-d9273432494d" type="audio/mpeg">
+    </audio>
+    <div class="music-btn" id="musicControl"><i class="fas fa-music"></i></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
